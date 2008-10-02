@@ -2,7 +2,7 @@ package Module::Setup;
 
 use strict;
 use warnings;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp ();
 use Class::Trigger;
@@ -91,12 +91,15 @@ sub run {
     $self->load_plugins($config);
 
     # create skeleton
-    my $chdir = $self->create_skeleton($config);
-    return unless $chdir;
+    my $attributes = $self->create_skeleton($config);
+    return unless $attributes;
+    $self->call_trigger( after_create_skeleton => $attributes );
 
     # test
-    chdir $chdir;
-    $self->call_trigger('check_skeleton_directory');
+    chdir Path::Class::Dir->new( @{ $attributes->{module_attribute}->{dist_path} } );
+    $self->call_trigger( check_skeleton_directory => $attributes );
+
+    $self->call_trigger( finalize_create_skeleton => $attributes );
 }
 
 sub setup_options {
@@ -253,6 +256,7 @@ sub write_template {
     $options->{template} = delete $options->{content} unless $options->{template};
     $options->{dist_path} =~ s/____var-(.+)-var____/$options->{vars}->{$1} || $options->{vars}->{config}->{$1}/eg;
 
+    push @{ $self->{install_files} }, $options->{dist_path};
     $self->write_file($options);
 }
 
@@ -342,6 +346,7 @@ sub _find_flavor_template {
 sub create_skeleton {
     my($self, $config) = @_;
     $config ||= +{};
+    $self->{install_files} = [];
 
     my @files = $self->_find_flavor_template($config);
 
@@ -374,7 +379,11 @@ sub create_skeleton {
     }
     $self->call_trigger( append_template_file => $template_vars, $module_attribute);
 
-    Path::Class::Dir->new( @{ $module_attribute->{dist_path} } );
+    return +{
+        module_attribute => $module_attribute,
+        template_vars    => $template_vars,
+        install_files    => $self->{install_files},
+    };
 }
 
 sub pack_flavor {
@@ -420,6 +429,7 @@ sub pack_flavor {
         }
     }
 
+    my $eq = '=';
     my $yaml = YAML::Dump(@template);
     print <<END;
 package $module;
@@ -428,15 +438,15 @@ use warnings;
 use base 'Module::Setup::Flavor';
 1;
 
-=head1
+${eq}head1
 
 $module - pack from $flavor
 
-=head1 SYNOPSIS
+${eq}head1 SYNOPSIS
 
   $ module-setup --init --flavor-class=+$module new_flavor
 
-=cut
+${eq}cut
 
 __DATA__
 

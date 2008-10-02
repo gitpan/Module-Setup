@@ -23,7 +23,7 @@ requires:
   File::Path: 0
   File::Temp: 0
   Getopt::Long: 0
-  Module::Collect: 0.03
+  Module::Collect: 0.04
   Path::Class: 0
   Pod::Usage: 0
   Scalar::Util: 0
@@ -31,4 +31,4 @@ requires:
   YAML: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01
+version: 0.02
