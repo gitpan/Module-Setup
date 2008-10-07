@@ -16,6 +16,11 @@ requires 'Scalar::Util';
 requires 'Template';
 requires 'YAML';
 
+# for author_tests in Flavor::Default
+requires 'Module::Install::AuthorTests';
+
+tests 't/*.t t/*/*.t';
+
 build_requires 'Test::More';
 use_test_base;
 auto_include;

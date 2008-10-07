@@ -2,7 +2,7 @@ package Module::Setup;
 
 use strict;
 use warnings;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp ();
 use Class::Trigger;
@@ -56,23 +56,24 @@ sub run {
         $options  = $self->setup_options;
     }
 
-    $options->{flavor}       ||= 'default';
-    $options->{flavor_class} ||= 'Default';
-
     no warnings 'redefine';
     local *has_term = $self->set_has_term_sub if $set_has_term; ## no critic
 
     my @argv = defined $argv && ref($argv) eq 'ARRAY' ? @{ $argv } : @ARGV;
 
+    $options->{flavor_class} ||= 'Default';
+
     # create flavor
     if ($options->{init}) {
-        $options->{flavor} = shift @argv if @argv;
+        $options->{flavor}   = shift @argv if @argv;
+        $options->{flavor} ||= 'default';
         return $self->create_flavor($options);
     }
 
     # create module
     $options->{module} = shift @argv;
     $options->{flavor} = shift @argv if @argv;
+    $options->{flavor} ||= $self->select_flavor;
 
     if ($options->{pack}) {
         #pack flavor template
@@ -115,6 +116,7 @@ sub setup_options {
         'flavor=s'       => \($options->{flavor}),
         'flavor-class=s' => \($options->{flavor_class}),
         'plugin=s@'      => \($options->{plugins}),
+        'target'         => \($options->{target}),
         version          => sub {
             print "module-setup v$VERSION\n";
             exit 1;
@@ -360,9 +362,12 @@ sub create_skeleton {
         dist_name => join('-', @pkg),
         dist_path => [ join('-', @pkg) ],
     };
+    if (exists $config->{target} && $config->{target}) {
+        unshift @{ $module_attribute->{dist_path} }, $config->{target};
+    }
     $self->call_trigger( after_setup_module_attribute => $module_attribute);
 
-    $self->create_directory( dir => $module_attribute->{dist_name} );
+    $self->create_directory( dir => Path::Class::Dir->new(@{ $module_attribute->{dist_path} }) );
 
     my $template_vars = {
         module      => $module_attribute->{module},
@@ -454,6 +459,25 @@ $yaml
 END
 }
 
+sub select_flavor {
+    my $self = shift;
+    return 'default' unless -d $self->module_setup_dir('flavors');
+
+    my $num = 1;
+    my @flavors;
+    for my $flavor ( $self->module_setup_dir('flavors')->children ) {
+        next unless $flavor->is_dir;
+
+        my $name = $flavor->dir_list(-1);
+        push @flavors, $name;
+
+        $self->log( sprintf "[%d]: %s", $num++, $name );
+    }
+
+    my $selected = $self->dialog( 'Select flavor:', 1 ) || 1;
+    $flavors[ $selected - 1 ] || 'default';
+}
+
 1;
 __END__
 
@@ -532,7 +556,7 @@ Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
 
 =head1 SEE ALSO
 
-L<Module::Setup::Plugin>, <L<module-setup>
+L<Module::Setup::Plugin>, L<module-setup>
 
 this module's base code is pmsetup written by Tatsuhiko Miyagawa.
 
