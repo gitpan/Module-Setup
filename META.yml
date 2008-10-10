@@ -3,6 +3,7 @@ abstract: "a simple module maker \"yet another Module::Start(?:er)?\""
 author:
   - 'Kazuhiro Osawa <ko@yappo.ne.jp>'
 build_requires:
+  IO::Scalar: 0
   Test::More: 0
 distribution_type: module
 generated_by: 'Module::Install version 0.760'
@@ -21,15 +22,15 @@ requires:
   File::Basename: 0
   File::Find::Rule: 0
   File::Path: 0
-  File::Temp: 0
+  File::Temp: 0.2
   Getopt::Long: 0
   Module::Collect: 0.04
   Module::Install::AuthorTests: 0
   Path::Class: 0
   Pod::Usage: 0
   Scalar::Util: 0
-  Template: 0
+  Template: 2.2
   YAML: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.03
+version: 0.03_01
