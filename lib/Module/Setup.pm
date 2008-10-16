@@ -2,7 +2,8 @@ package Module::Setup;
 
 use strict;
 use warnings;
-our $VERSION = '0.03_02';
+use 5.008001;
+our $VERSION = '0.03_03';
 
 use Carp ();
 use Class::Trigger;
@@ -213,8 +214,14 @@ sub install_flavor {
     my($self, $name, $tmpl) = @_;
 
     my $flavor = $self->base_dir->flavor;
-    my $path = (exists $tmpl->{plugin} && $tmpl->{plugin}) ?
-        $flavor->plugins->path_to($tmpl->{plugin}) : $flavor->template->path_to($tmpl->{file});
+    my $path;
+    if (exists $tmpl->{file} && $tmpl->{file}) {
+        $path = $flavor->template->path_to(split '/', $tmpl->{file});
+    } elsif (exists $tmpl->{dir} && $tmpl->{dir}) {
+        return Module::Setup::Path::Dir->new( $flavor->template->path, split('/', $tmpl->{dir}) )->mkpath;
+    } elsif (exists $tmpl->{plugin} && $tmpl->{plugin}) {
+        $path = $flavor->plugins->path_to(split '/', $tmpl->{plugin});
+    }
 
     $self->write_file(+{
         dist_path => $path,
@@ -307,11 +314,17 @@ sub _collect_flavor_files {
 
     my $base_path = $type->path;
     for my $file ($type->find_files) {
-        my $data = $type->path_to($file)->slurp;
-        push @{ $template }, +{
-            $path_name => "$file",
-            template   => $data,
-        };
+        if ($file->is_dir) {
+            push @{ $template }, +{
+                dir => join('/', $file->dir_list),
+            };
+        } else {
+            my $data = $type->path_to($file)->slurp;
+            push @{ $template }, +{
+                $path_name => join('/', $file->dir->dir_list, $file->basename),
+                template   => $data,
+            };
+        }
     }
 }
 
@@ -330,7 +343,7 @@ sub pack_flavor {
 
     my $eq = '=';
     my $yaml = YAML::Dump(@{ $template });
-    print <<END;
+    $self->stdout(<<END);
 package $module;
 use strict;
 use warnings;
@@ -382,6 +395,10 @@ sub select_flavor {
     return $selected;
 }
 
+sub stdout {
+    my($self, $msg) = @_;
+    print STDOUT "$msg\n" if $HAS_TERM;
+}
 sub log {
     my($self, $msg) = @_;
     print STDERR "$msg\n" if $HAS_TERM;
@@ -448,7 +465,7 @@ When the module-setup command is executed first, a necessary template for ~/.mod
 
 L<Module::Starter> is very useful module. However customize of module template is complex.
 
-If L<Module::Sterter::PBP> is used, do you solve it?
+If L<Module::Starter::PBP> is used, do you solve it?
 
 Yes, but switch of two or more templates is complex.
 
@@ -471,6 +488,8 @@ if incorporating Module::Setup in your application, you can make Helper which is
 =head1 AUTHOR
 
 Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
+
+walf443
 
 =head1 SEE ALSO
 
