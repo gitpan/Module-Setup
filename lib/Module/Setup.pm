@@ -3,10 +3,11 @@ package Module::Setup;
 use strict;
 use warnings;
 use 5.008001;
-our $VERSION = '0.03_03';
+our $VERSION = '0.04';
 
 use Carp ();
 use Class::Trigger;
+use Cwd ();
 use ExtUtils::MakeMaker qw(prompt);
 use File::HomeDir;
 use File::Path;
@@ -31,8 +32,14 @@ sub new {
 
     $args{options} ||= +{};
     $args{argv}    ||= +[];
+    $args{_current_dir} = Cwd::getcwd;
 
     bless { %args }, $class;
+}
+
+sub DESTROY {
+    my $self = shift;
+    chdir $self->{_current_dir} unless $self->{_current_dir} eq Cwd::getcwd;
 }
 
 sub setup_options {
@@ -43,19 +50,19 @@ sub setup_options {
 
     my $options = {};
     GetOptions(
-        'init'             => \($options->{init}),
-        'pack'             => \($options->{pack}),
-        'direct'           => \($options->{direct}),
-        'flavor=s'         => \($options->{flavor}),
-        'flavor-class=s'   => \($options->{flavor_class}),
-        'plugin=s@'        => \($options->{plugins}),
-        'target'           => \($options->{target}),
-        'module-setup-dir' => \($options->{module_setup_dir}),
-        version            => sub {
+        'init'                         => \($options->{init}),
+        'pack'                         => \($options->{pack}),
+        'direct'                       => \($options->{direct}),
+        'flavor|flavour=s'             => \($options->{flavor}),
+        'flavor-class|flavour-class=s' => \($options->{flavor_class}),
+        'plugin=s@'                    => \($options->{plugins}),
+        'target'                       => \($options->{target}),
+        'module-setup-dir'             => \($options->{module_setup_dir}),
+        version                        => sub {
             print "module-setup v$VERSION\n";
             exit 1;
         },
-        help               => sub { pod2usage(1); },
+        help                           => sub { pod2usage(1); },
     ) or pod2usage(2);
 
     $self->{options} = $options;
@@ -88,7 +95,7 @@ sub setup_base_dir {
     if ($self->options->{direct}) {
         $path = File::Temp->newdir;
     } else {
-        $path = $self->options->{module_setup_dir} || $ENV{MODULE_SETUP_DIR} || File::HomeDir->my_home;
+        $path = $self->options->{module_setup_dir} || $ENV{MODULE_SETUP_DIR} || Path::Class::Dir->new(File::HomeDir->my_home, '.module-setup');
     }
 
     $self->{base_dir} = Module::Setup::Path->new($path);
@@ -130,6 +137,7 @@ sub run {
     chdir $self->distribute->dist_path;
     $self->call_trigger( 'check_skeleton_directory' );
     $self->call_trigger( 'finalize_create_skeleton' );
+    chdir $self->{_current_dir};
 }
 
 
@@ -187,7 +195,7 @@ sub load_plugins {
             eval "require $pkg"; ## no critic
             Carp::croak $@ if $@;
         }
-        $self->{loaded_plugin}->{$pkg} = $pkg->new( context => $self, config => $self->config );
+        $self->{loaded_plugin}->{$pkg} = $pkg->new( context => $self, config => $config );
     }
 }
 
@@ -314,15 +322,17 @@ sub _collect_flavor_files {
 
     my $base_path = $type->path;
     for my $file ($type->find_files) {
+        my @path = $file->is_dir ? $file->dir_list : ($file->dir->dir_list, $file->basename);
+        while ($path[0] eq '.') { shift @path };
+
         if ($file->is_dir) {
             push @{ $template }, +{
-                dir => join('/', $file->dir_list),
+                dir => join('/', @path),
             };
         } else {
-            my $data = $type->path_to($file)->slurp;
             push @{ $template }, +{
-                $path_name => join('/', $file->dir->dir_list, $file->basename),
-                template   => $data,
+                $path_name => join('/', @path),
+                template   => $type->path_to($file)->slurp || '',
             };
         }
     }
@@ -413,6 +423,11 @@ sub dialog {
     }
 }
 
+sub system {
+    my($self, @args) = @_;
+    CORE::system(@args);
+}
+
 1;
 __END__
 
@@ -490,6 +505,8 @@ if incorporating Module::Setup in your application, you can make Helper which is
 Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
 
 walf443
+
+hidek
 
 =head1 SEE ALSO
 
