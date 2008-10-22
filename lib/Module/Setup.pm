@@ -3,7 +3,7 @@ package Module::Setup;
 use strict;
 use warnings;
 use 5.008001;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Carp ();
 use Class::Trigger;
@@ -27,6 +27,7 @@ sub config     { shift->{config} }
 sub options    { shift->{options} }
 sub base_dir   { shift->{base_dir} }
 sub distribute { shift->{distribute} }
+sub plugins_stash { shift->{plugins_stash} }
 
 sub new {
     my($class, %args) = @_;
@@ -35,7 +36,11 @@ sub new {
     $args{argv}    ||= +[];
     $args{_current_dir} = Cwd::getcwd;
 
-    bless { %args }, $class;
+    my $self = bless { %args }, $class;
+    $self->{_current_dir}  = Cwd::getcwd;
+    $self->{plugins_stash} = +{};
+
+    $self;
 }
 
 sub DESTROY {
@@ -151,6 +156,9 @@ sub run {
     $self->call_trigger( 'check_skeleton_directory' );
     $self->call_trigger( 'finalize_create_skeleton' );
     chdir $self->{_current_dir};
+
+    $self->call_trigger( 'finish_of_run' );
+    $self;
 }
 
 
@@ -307,9 +315,14 @@ sub create_flavor {
             $self->install_flavor($tmpl);
         }
     }
+
     $self->base_dir->flavor->additional->path->mkpath;
     $self->base_dir->flavor->additional->config->dump($additional_config);
-    return 1 if $options->{additional};
+
+    if ($options->{additional}) {
+        $flavor_class->setup_additional($self, $config);
+        return 1;
+    }
 
     $self->base_dir->flavor->plugins->path->mkpath;
     $self->base_dir->flavor->template->path->mkpath;
@@ -319,6 +332,8 @@ sub create_flavor {
         push @{ $config->{plugins} }, @{ delete $options->{plugins} };
     }
     $config->{plugins} ||= [];
+
+    $flavor_class->setup_config($self, $config);
 
     # load plugins
     local $self->{config} = +{
@@ -589,6 +604,8 @@ Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
 walf443
 
 hidek
+
+tokuhirom
 
 =head1 SEE ALSO
 
