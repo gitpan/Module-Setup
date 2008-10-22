@@ -22,10 +22,12 @@ sub new {
     $self->{base_path}   = Module::Setup::Path::Dir->new($target, $self->{dist_name});
     $self->{dist_path}   = Module::Setup::Path::Dir->new($target, $self->{dist_name});
     $self->{module_path} = join '/', @{ $self->{package} };
+    $self->{additionals} = [];
 
     $self;
 }
 
+sub additionals   { shift->{additionals} };
 sub module        { shift->{module} };
 sub module_path   { shift->{module_path} };
 sub package       { shift->{package} };
@@ -40,9 +42,10 @@ sub set_template_vars {
 }
 
 sub install_template {
-    my($self, $context, $path) = @_;
+    my($self, $context, $path, $base_src) = @_;
 
-    my $src      = $context->base_dir->flavor->template->path_to($path);
+    $base_src = $context->base_dir->flavor->template unless $base_src;
+    my $src      = $base_src->path_to($path);
     my $template = $src->is_dir ? undef : $src->slurp;
     my $options = +{
         dist_path => ($src->is_dir ? $self->dist_path->subdir($path) : $self->dist_path->file($path)),
@@ -51,6 +54,7 @@ sub install_template {
         vars      => $self->template_vars,
         content   => undef,
     };
+    $options->{content} = delete $options->{template} if -B $src;
     $self->write_template($context, $options);
 }
 

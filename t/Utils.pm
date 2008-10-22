@@ -7,17 +7,26 @@ use Path::Class;
 
 use Module::Setup;
 
+my $stdout = [];
+sub stdout { $stdout }
+
 sub import {
     my $class  = shift;
     my $caller = caller;
+    my %args   = @_;
 
-    for my $func (qw/ module_setup stdout dialog default_dialog setup_dir target_dir clear_tempdir flavors_dir template_dir plugins_dir config_file /) {
+    for my $func (qw/ module_setup stdout dialog default_dialog setup_dir target_dir clear_tempdir flavors_dir template_dir additional_dir additional_config_file plugins_dir config_file /) {
         no strict 'refs';
         *{"$caller\::$func"} = \&{ $func };
     }
 
     strict->import;
     warnings->import;
+
+    unless ($args{without_stdout}) {
+        no warnings 'redefine';
+        *Module::Setup::stdout = sub { push @{ $stdout }, $_[1] };
+    }
 }
 
 sub _path_dir (@) {
@@ -34,6 +43,14 @@ sub flavors_dir {
 sub template_dir {
     my $flavor = shift;
     flavors_dir($flavor, 'template', @_);
+}
+sub additional_dir {
+    my $flavor = shift;
+    flavors_dir($flavor, 'additional', @_);
+}
+sub additional_config_file {
+    my $flavor = shift;
+    additional_dir($flavor)->file('config.yaml');
 }
 sub plugins_dir {
     my $flavor = shift;
@@ -55,13 +72,8 @@ sub clear_tempdir {
     $target_dir = undef;
 }
 
-my $stdout = [];
-{
-    no warnings 'redefine';
-    *Module::Setup::stdout = sub { push @{ $stdout }, $_[1] };
-}
-sub stdout { $stdout }
-
+my $context;
+sub context { $context }
 sub module_setup ($@) {
     $stdout = [];
     my($options, @argv) = @_;
@@ -72,10 +84,11 @@ sub module_setup ($@) {
         $options->{target} = target_dir;
     }
 
-    Module::Setup->new(
+    $context = Module::Setup->new(
         options => $options,
         argv => \@argv,
-    )->run;
+    );
+    $context->run;
 }
 
 sub dialog (;&) {
