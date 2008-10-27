@@ -1,4 +1,4 @@
-package t::Utils;
+package Module::Setup::Test::Utils;
 use strict;
 use warnings;
 
@@ -15,7 +15,7 @@ sub import {
     my $caller = caller;
     my %args   = @_;
 
-    for my $func (qw/ module_setup stdout dialog default_dialog setup_dir target_dir clear_tempdir flavors_dir template_dir additional_dir additional_config_file plugins_dir config_file /) {
+    for my $func (qw/ context module_setup stdout dialog default_dialog setup_dir target_dir clear_tempdir flavors_dir template_dir additional_dir additional_config_file plugins_dir config_file /) {
         no strict 'refs';
         *{"$caller\::$func"} = \&{ $func };
     }
@@ -34,7 +34,7 @@ sub _path_dir (@) {
 }
 my $setup_dir;
 sub setup_dir (@) {
-    $setup_dir ||= File::Temp->newdir;
+    $setup_dir = File::Temp->newdir unless $setup_dir;
     _path_dir($setup_dir, @_);
 }
 sub flavors_dir {
@@ -63,7 +63,7 @@ sub config_file {
 
 my $target_dir;
 sub target_dir (@) {
-    $target_dir ||= File::Temp->newdir;
+    $target_dir = File::Temp->newdir unless $target_dir;
     _path_dir($target_dir, @_);
 }
 
@@ -79,7 +79,7 @@ sub module_setup ($@) {
     my($options, @argv) = @_;
     @argv = @{ $argv[0] } if ref $argv[0] eq 'ARRAY';
 
-    $options->{module_setup_dir} ||= setup_dir;
+    $options->{module_setup_dir} = setup_dir unless $options->{module_setup_dir};
     if ($options->{target}) {
         $options->{target} = target_dir;
     }
@@ -93,10 +93,8 @@ sub module_setup ($@) {
 
 sub dialog (;&) {
     my $code = shift;
-    if (ref $code eq 'CODE') {
-        no warnings 'redefine';
-        *Module::Setup::dialog = $code;
-    }
+    no warnings 'redefine';
+    *Module::Setup::dialog = $code;
 }
 
 sub default_dialog {
@@ -108,5 +106,42 @@ sub default_dialog {
     };
 }
 
-
 1;
+
+=head1 NAME
+
+Module::Setup::Test::Utils - Test utils
+
+=head1 METHODS
+
+=head2 module_setup
+
+=head2 context
+
+=head2 stdout
+
+=head2 clear_tempdir
+
+
+=head2 dialog
+
+=head2 default_dialog
+
+
+=head2 target_dir
+
+=head2 setup_dir
+
+=head2 flavors_dir
+
+=head2 template_dir
+
+=head2 plugins_dir
+
+=head2 config_file
+
+=head2 additional_dir
+
+=head2 additional_config_file
+
+=cut

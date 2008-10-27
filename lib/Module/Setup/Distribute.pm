@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Fcntl qw( :mode );
+use YAML ();
 
 use Module::Setup::Path::Dir;
 
@@ -19,9 +20,10 @@ sub new {
         install_files => [],
     }, $class;
 
+    $self->{target_path} = Module::Setup::Path::Dir->new($target);
     $self->{base_path}   = Module::Setup::Path::Dir->new($target, $self->{dist_name});
     $self->{dist_path}   = Module::Setup::Path::Dir->new($target, $self->{dist_name});
-    $self->{module_path} = join '/', @{ $self->{package} };
+    $self->{module_path} = Module::Setup::Path::Dir->new(@{ $self->{package} });
     $self->{additionals} = [];
 
     $self;
@@ -32,6 +34,7 @@ sub module        { shift->{module} };
 sub module_path   { shift->{module_path} };
 sub package       { shift->{package} };
 sub dist_name     { shift->{dist_name} };
+sub target_path   { shift->{target_path} };
 sub base_path     { shift->{base_path} };
 sub dist_path     { shift->{dist_path} };
 sub template_vars { shift->{template_vars} };

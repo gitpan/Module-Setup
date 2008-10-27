@@ -1,4 +1,4 @@
-use t::Utils;
+use Module::Setup::Test::Utils;
 use Test::Base;
 
 plan tests => 2 * blocks;
@@ -21,6 +21,9 @@ run {
         init               => undef,
         additional         => undef,
         without_additional => undef,
+        executable         => undef,
+        devel              => undef,
+        test               => undef,
         %{ $block->options || {} },
     };
 
@@ -115,3 +118,32 @@ additional: Add
 --- options
 pack: 1
 without_additional: 1
+
+===
+--- input
+--devel
+--test
+--- argv
+--- options
+devel: 1
+test: 1
+
+===
+--- input
+--devel
+--pack
+--executable
+--- argv
+--- options
+devel: 1
+pack: 1
+executable: 1
+
+===
+--- input
+--pack
+--executable
+--- argv
+--- options
+pack: 1
+executable: 1

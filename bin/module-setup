@@ -46,5 +46,19 @@ Options:
     --additional=name          additional template name (use L<Module::Setup::Plugin::Additional>)
     --help                     Show this message
 
+For Devel:
+
+    --devel                    for flavor development
+      --test                   develpoment flavor test
+      --pack                   create flavor module file
+        --executable           create executable file
+
+    $ module-setup --devel FlavorClassName  # create skeleton
+    $ cd FlavorClassName
+    $ # edit
+    $ module-setup --devel --test              # flavor test
+    $ module-setup --devel --pack              # flavor packing
+    $ module-setup --devel --pack --executable > fobar-setup.pl # create executable file
+
 =cut
 
