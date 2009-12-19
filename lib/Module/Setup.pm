@@ -3,7 +3,7 @@ package Module::Setup;
 use strict;
 use warnings;
 use 5.008001;
-our $VERSION = '0.06_01';
+our $VERSION = '0.07';
 
 use Carp ();
 use Class::Trigger;
@@ -390,6 +390,7 @@ sub create_skeleton {
         config      => $config,
         distribute  => $self->distribute,
         localtime   => scalar localtime,
+        moniker     => $self->distribute->package->[ scalar(@{ $self->distribute->package })-1 ],
     };
     $self->call_trigger( after_setup_template_vars => $template_vars);
     $self->{distribute}->set_template_vars($template_vars);
@@ -560,6 +561,11 @@ sub system {
     CORE::system(@args);
 }
 
+sub shell {
+    my($self, $cmd) = @_;
+    `$cmd`;
+}
+
 1;
 __END__
 
@@ -636,16 +642,20 @@ if incorporating Module::Setup in your application, you can make Helper which is
 =head1 Example For Incorporating
 
   use Module::Setup;
-  my $pmsetup = Module::Setup->new;
+
   local $ENV{MODULE_SETUP_DIR} = '/tmp/module-setup'; # dont use  ~/.module-setup directory
   my $options = {
       # see setup_options method
   };
-  $pmsetup->run($options, [qw/ New::Module foo_flavor /]); # create New::Module module with foo_flavor flavor
+  my $pmsetup = Module::Setup->new(
+      options => $options,
+      argv    => [qw/ New::Module foo_flavor /],
+  );
+  $pmsetup->run; # create New::Module module with foo_flavor flavor
 
 =head1 AUTHOR
 
-Kazuhiro Osawa E<lt>ko@yappo.ne.jpE<gt>
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
 
 walf443
 

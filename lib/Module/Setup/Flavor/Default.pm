@@ -29,8 +29,8 @@ template: |
   tests 't/*.t';
   author_tests 'xt';
 
-  build_requires 'Test::More';
-  use_test_base;
+  test_requires 'Test::More';
+  auto_set_repository;
   auto_include;
   WriteAll;
 ---
@@ -87,7 +87,6 @@ template: |
 file: lib/____var-module_path-var____.pm
 template: |
   package [% module %];
-
   use strict;
   use warnings;
   our $VERSION = '0.01';
@@ -141,6 +140,8 @@ template: |
   ^[^/]+\.yaml$
   ^[^/]+\.pl$
   ^\.shipit$
+  ^\.git/
+  \.sw[po]$
 ---
 file: README
 template: |
@@ -176,7 +177,6 @@ file: .shipit
 chmod: 0644
 template: |
   steps = FindVersion, ChangeVersion, CheckChangeLog, DistTest, Commit, Tag, MakeDist, UploadCPAN
-  svk.tagpattern = release-%v
 ---
 config:
   plugins:

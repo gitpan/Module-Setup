@@ -1,12 +1,16 @@
 ---
 abstract: "a simple module maker \"yet another Module::Start(?:er)?\""
 author:
-  - 'Kazuhiro Osawa <ko@yappo.ne.jp>'
+  - 'Kazuhiro Osawa <yappo <at> shibuya <döt> pl>'
 build_requires:
+  ExtUtils::MakeMaker: 6.42
   IO::Scalar: 0
   Test::More: 0
+  Test::Requires: 0
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.760'
+generated_by: 'Module::Install version 0.910'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -25,16 +29,20 @@ requires:
   File::HomeDir: 0
   File::Path: 0
   File::Temp: 0.2
+  Filter::Util::Call: 0
   Getopt::Long: 0
   Module::Collect: 0.04
   Module::Install::AuthorTests: 0
+  Module::Install::Repository: 0
   Path::Class: 0
   Pod::Usage: 0
   Scalar::Util: 0
   Storable: 0
   Template: 2.2
+  Text::Patch: 0
   YAML: 0
   perl: 5.8.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.06_01
+  repository: git://github.com/yappo/p5-Module-Setup.git
+version: 0.07

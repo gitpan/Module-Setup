@@ -48,6 +48,14 @@ sub _import_template {
             my $key = "$type - $tmpl->{$type}";
             next LOOP if $args->{template_loaded}->{$key}++;
             my $template = delete $args->{template_index}->{$key};
+
+            if (ref($template) eq 'HASH' && $template->{patch}) {
+                # apply patch
+                eval "require Text::Patch;";
+                die $@ if $@;
+                $template->{template} = Text::Patch::patch( $tmpl->{template}, $template->{patch}, STYLE => 'Unified' );
+            }
+
             $template = $tmpl unless $template;
             push @template, $template;
             next LOOP;
@@ -121,11 +129,11 @@ Module::Setup::Flavor - Module::Setup Flavor
 
 flavor setup, if return value is false is exit create flavor
 
-=head1 setup_config
+=head2 setup_config
 
 before flavors plugin load
 
-=head1 setup_additional
+=head2 setup_additional
 
 end of additional flavor install
 

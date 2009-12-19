@@ -19,16 +19,22 @@ requires 'Scalar::Util';
 requires 'Storable';
 requires 'Template'        => 2.20;
 requires 'YAML';
+requires 'Module::Install::Repository';
+
+requires 'Text::Patch';
 
 # for author_tests in Flavor::Default
 requires 'Module::Install::AuthorTests';
 
 tests 't/*.t t/*/*.t';
 
-build_requires 'IO::Scalar';
-build_requires 'Test::More';
+test_requires 'IO::Scalar';
+test_requires 'Test::More';
+test_requires 'Test::Requires';
+
 use_test_base;
 auto_include;
+auto_set_repository;
 
 install_script('bin/module-setup');
 
