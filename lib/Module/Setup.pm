@@ -3,7 +3,7 @@ package Module::Setup;
 use strict;
 use warnings;
 use 5.008001;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Carp ();
 use Class::Trigger;
@@ -13,7 +13,6 @@ use File::HomeDir;
 use File::Path;
 use File::Temp;
 use Getopt::Long;
-use Path::Class;
 use Pod::Usage;
 
 use Module::Setup::Devel;
@@ -36,7 +35,6 @@ sub new {
 
     $args{options} ||= +{};
     $args{argv}    ||= +[];
-    $args{_current_dir} = Cwd::getcwd;
 
     my $self = bless { %args }, $class;
     $self->{_current_dir}  = Cwd::getcwd;
@@ -125,7 +123,7 @@ sub setup_base_dir {
     if ($self->options->{direct}) {
         $path = File::Temp->newdir;
     } else {
-        $path = $self->options->{module_setup_dir} || $ENV{MODULE_SETUP_DIR} || Path::Class::Dir->new(File::HomeDir->my_home, '.module-setup');
+        $path = $self->options->{module_setup_dir} || $ENV{MODULE_SETUP_DIR} || Module::Setup::Path::Dir->new(File::HomeDir->my_home, '.module-setup');
     }
     die 'module_setup directory was not able to be discovered.' unless $path;
 
@@ -662,6 +660,12 @@ walf443
 hidek
 
 tokuhirom
+
+typester
+
+gfx
+
+charsbar
 
 =head1 SEE ALSO
 
