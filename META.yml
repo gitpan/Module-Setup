@@ -32,7 +32,7 @@ requires:
   Filter::Util::Call: 0
   Getopt::Long: 0
   LWP::UserAgent: 0
-  Module::Collect: 0.04
+  Module::Collect: 0.06
   Module::Install::AuthorTests: 0
   Module::Install::Repository: 0
   Path::Class: 0
@@ -46,4 +46,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/yappo/p5-Module-Setup.git
-version: 0.08
+version: 0.09

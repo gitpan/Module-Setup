@@ -3,7 +3,7 @@ package Module::Setup;
 use strict;
 use warnings;
 use 5.008001;
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use Carp ();
 use Class::Trigger;
@@ -651,6 +651,20 @@ if incorporating Module::Setup in your application, you can make Helper which is
   );
   $pmsetup->run; # create New::Module module with foo_flavor flavor
 
+=head2 Module::Setup::Core
+
+Module::Setup considers as possible that it can use as Helper-toolkit for other applications.
+but Module::Setup has many dependence modules.
+I hear "Module::Setup is very not usefl for my application helper tool, because many dependence." well.
+
+The Core function of Module::Setup is split to another distribution in conclusion.
+The name considered now is Module::Setup::Core.
+It leaves Flavors, Plugins and C<module-setup> script to Module::Setup.
+
+Really required dependence for Core is lessened by this thing.
+
+It develops in L<http://github.com/yappo/p5-Module-Setup-Core> and Module::Setup's core-branch.
+
 =head1 AUTHOR
 
 Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
@@ -677,9 +691,8 @@ some pmsetup scripts are in a L<http://svn.coderepos.org/share/lang/perl/misc/pm
 
 =head1 REPOSITORY
 
-  svn co http://svn.coderepos.org/share/lang/perl/Module-Setup/trunk Module-Setup
-
-Module::Setup is Subversion repository is hosted at L<http://coderepos.org/share/>.
+  git clone git://github.com/yappo/p5-Module-Setup.git
+Module::Setup is git repository is hosted at L<http://github.com/yappo/p5-Module-Setup>.
 patches and collaborators are welcome.
 
 =head1 LICENSE
